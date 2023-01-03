@@ -1,24 +1,8 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { WriteFileOptions } from "fs";
-import { FileMetadata } from 'wordparrot-types';
+import { FileMetadata, FileUtilityConfig } from 'wordparrot-types';
 import { FileOperation } from "../..";
-export interface FileUtilityConfig {
-    pipelineJobId: string;
-    pipelineNodeId: string;
-    filename: string;
-    promptRecipientId?: string;
-    uniqId?: string;
-    buffer?: Buffer;
-    mimeType?: string;
-    encoding?: WriteFileOptions;
-    repositoryId?: string;
-    repositoryFileId?: string;
-    predefinedPath?: string;
-    parentRepositoryItem?: {
-        nodeUniqId: string;
-        uniqId: string;
-    };
-}
 export declare class FileUtility {
     pipelineJobId: string;
     pipelineNodeId: string;
@@ -37,7 +21,7 @@ export declare class FileUtility {
     };
     tempFolder: string;
     repositoriesFolder: string;
-    constructor(config: FileUtilityConfig);
+    constructor(config: FileUtilityConfig<WriteFileOptions>);
     get jobPath(): string;
     get nodePath(): string;
     get filePath(): string;

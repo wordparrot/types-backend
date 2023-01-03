@@ -1,11 +1,7 @@
+/// <reference types="node" />
 import { Axios } from "axios";
-import { FileUtility, FileUtilityConfig } from "..";
-import { ConstructableWithConfig } from "..";
-export declare type SandboxLib = {
-    axios: Axios;
-    _: any;
-    qs: any;
-    FormData: any;
-    crypto?: any;
-    FileUtility: ConstructableWithConfig<FileUtilityConfig, FileUtility>;
-};
+import { WriteFileOptions } from "fs";
+import { FileUtilityConfig, SandboxLib as AbstractSandboxLib } from "wordparrot-types";
+import { FileUtility } from "..";
+export interface SandboxLib extends AbstractSandboxLib<Axios, FileUtilityConfig<WriteFileOptions>, FileUtility> {
+}

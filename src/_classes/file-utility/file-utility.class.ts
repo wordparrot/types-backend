@@ -8,7 +8,7 @@ import {
   unlink,
   writeFile,
 } from "fs";
-import { FileMetadata } from 'wordparrot-types';
+import { FileMetadata, FileUtilityConfig } from "wordparrot-types";
 import { isInteger, throttle } from "lodash";
 import { promisify } from "util";
 
@@ -21,24 +21,6 @@ const deleteFilePromisified = promisify(unlink);
 const statPromisified = promisify(stat);
 const mkdirPromisified = promisify(mkdir);
 const rmdirPromisified = promisify(rm);
-
-export interface FileUtilityConfig {
-  pipelineJobId: string;
-  pipelineNodeId: string;
-  filename: string;
-  promptRecipientId?: string;
-  uniqId?: string;
-  buffer?: Buffer;
-  mimeType?: string;
-  encoding?: WriteFileOptions;
-  repositoryId?: string;
-  repositoryFileId?: string;
-  predefinedPath?: string;
-  parentRepositoryItem?: {
-    nodeUniqId: string;
-    uniqId: string;
-  };
-}
 
 export class FileUtility {
   pipelineJobId: string;
@@ -63,7 +45,7 @@ export class FileUtility {
     process.env.WORDPARROT_REPOSITORIES_FILE_PATH ||
     `${process.cwd()}/content/repositories`;
 
-  constructor(config: FileUtilityConfig) {
+  constructor(config: FileUtilityConfig<WriteFileOptions>) {
     this.uniqId = config.uniqId;
     this.pipelineJobId = config.pipelineJobId;
     this.pipelineNodeId = config.pipelineNodeId;
