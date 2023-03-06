@@ -1,26 +1,22 @@
+import { BufferEncodingOption, WriteFileOptions, rm } from "fs";
 import {
-  BufferEncodingOption,
-  WriteFileOptions,
-  mkdir,
-  readFile,
-  rm,
-  stat,
-  unlink,
-  writeFile,
-} from "fs";
-import { FileMetadata, FileUtilityConfig } from "wordparrot-types";
+  FileMetadata,
+  FileMetadataContentFolder,
+  FileUtilityConfig,
+} from "wordparrot-types";
 import { isInteger, throttle } from "lodash";
 import { promisify } from "util";
+import {
+  readFile,
+  writeFile,
+  unlink,
+  stat,
+  mkdir,
+  rmdir,
+} from "node:fs/promises";
 
 import { FileOperation } from "../..";
 import { getExtension, getFilenameBase, replaceStringIndexAt } from "../..";
-
-const readFilePromisified = promisify(readFile);
-const writeFilePromisified = promisify(writeFile);
-const deleteFilePromisified = promisify(unlink);
-const statPromisified = promisify(stat);
-const mkdirPromisified = promisify(mkdir);
-const rmdirPromisified = promisify(rm);
 
 export class FileUtility {
   pipelineJobId: string;
@@ -34,11 +30,14 @@ export class FileUtility {
   repositoryFileId: string;
   uniqId: string;
   predefinedPath: string;
+  imageId?: string;
+  contentFolder?: FileMetadataContentFolder;
   parentRepositoryItem?: {
     nodeUniqId: string;
     uniqId: string;
   };
 
+  public imagesFolder = `${process.cwd()}/content/images`;
   public tempFolder =
     process.env.WORDPARROT_TEMP_FILE_PATH || `${process.cwd()}/content/temp`;
   public repositoriesFolder =
@@ -58,6 +57,8 @@ export class FileUtility {
     this.repositoryFileId = config.repositoryFileId;
     this.parentRepositoryItem = config.parentRepositoryItem;
     this.predefinedPath = config.predefinedPath;
+    this.imageId = config.imageId;
+    this.contentFolder = config.contentFolder;
   }
 
   get jobPath(): string {
@@ -70,6 +71,10 @@ export class FileUtility {
 
   get filePath(): string {
     return `${this.nodePath}/${this.filename}`;
+  }
+
+  get imagesPath(): string {
+    return `${this.imagesFolder}/${this.filename}`;
   }
 
   get repositoriesPath(): string {
@@ -91,24 +96,66 @@ export class FileUtility {
   }
 
   getMetadata(): FileMetadata {
-    if (!this.predefinedPath && !this.filePath) {
+    if (!this.predefinedPath && !this.nodePath && !this.contentFolder) {
       throw new Error(
         "File Utility getMetadata(): no path available for file source."
       );
     }
-    return {
+
+    let path: string;
+
+    if (this.predefinedPath) {
+      path = this.predefinedPath;
+    } else {
+      switch (this.contentFolder) {
+        case "images":
+          path = this.imagesPath;
+          break;
+        case "temp":
+          path = this.jobPath;
+          break;
+        case "repositories":
+          path = this.repositoriesFilePath;
+          break;
+        default:
+          path = this.filePath;
+      }
+    }
+
+    const baseMetadata: FileMetadata = {
       uniqId: this.uniqId ?? this.generateUniqueId(),
       filename: this.filename,
-      path: this.predefinedPath || this.filePath,
+      path,
       type: getExtension(this.filename),
       mimeType: this.mimeType,
       encoding: this.encoding,
-      pipelineJobId: this.pipelineJobId,
-      pipelineNodeId: this.pipelineNodeId,
-      repositoryId: this.repositoryId,
-      repositoryFileId: this.repositoryFileId,
-      parentRepositoryItem: this.parentRepositoryItem,
     };
+
+    if (this.imageId) {
+      baseMetadata.imageId = this.imageId;
+    }
+
+    if (this.pipelineJobId) {
+      baseMetadata.pipelineJobId = this.pipelineJobId;
+    }
+
+    if (this.pipelineJobId) {
+      baseMetadata.pipelineNodeId = this.pipelineNodeId;
+    }
+
+    if (this.repositoryId) {
+      baseMetadata.repositoryId = this.repositoryId;
+    }
+
+    if (this.repositoryFileId) {
+      baseMetadata.repositoryFileId = this.repositoryFileId;
+    }
+
+    if (this.parentRepositoryItem) {
+      baseMetadata.parentRepositoryItem = this.parentRepositoryItem;
+    }
+
+    return baseMetadata;
   }
 
   private generateUniqueId(): string {
@@ -140,11 +187,11 @@ export class FileUtility {
 
   private async createNodeTempFolders() {
     try {
-      await statPromisified(this.jobPath);
+      await stat(this.jobPath);
     } catch (e) {
       // This folder does not exist yet
       try {
-        await mkdirPromisified(this.jobPath);
+        await mkdir(this.jobPath);
       } catch (e) {
         console.log(e);
         // This folder does not exist yet
@@ -153,11 +200,11 @@ export class FileUtility {
     }
 
     try {
-      await statPromisified(this.nodePath);
+      await stat(this.nodePath);
     } catch (e) {
       // This folder does not exist yet
       try {
-        await mkdirPromisified(this.nodePath);
+        await mkdir(this.nodePath);
       } catch (e) {
         console.log(e);
         // This folder does not exist yet
@@ -170,16 +217,16 @@ export class FileUtility {
     if (!this.buffer) {
       throw new Error("File Utility writeToTempFolder: no buffer found.");
     }
-    return writeFilePromisified(this.filePath, this.buffer, encoding);
+    return writeFile(this.filePath, this.buffer, encoding);
   }
 
   async createRepositoryFolder() {
     try {
-      await statPromisified(this.repositoriesPath);
+      await stat(this.repositoriesPath);
     } catch (e) {
       // This folder does not exist yet
       try {
-        await mkdirPromisified(this.repositoriesPath);
+        await mkdir(this.repositoriesPath);
       } catch (e) {
         console.log(e);
         // This folder does not exist yet
@@ -189,18 +236,18 @@ export class FileUtility {
   }
 
   async retrieveBufferFromTemp(): Promise<Buffer> {
-    this.buffer = await readFilePromisified(this.filePath);
+    this.buffer = await readFile(this.filePath);
     return this.buffer;
   }
 
   async retrieveBufferFromRepository(): Promise<Buffer> {
-    this.buffer = await readFilePromisified(this.repositoriesFilePath);
+    this.buffer = await readFile(this.repositoriesFilePath);
     return this.buffer;
   }
 
   static async getBuffer(fileMetadata: FileMetadata) {
     const { path } = fileMetadata;
-    return readFilePromisified(path);
+    return readFile(path);
   }
 
   async saveTempToRepositoryFolder(
@@ -226,11 +273,11 @@ export class FileUtility {
       }
 
       try {
-        await statPromisified(this.repositoriesFilePath);
+        await stat(this.repositoriesFilePath);
         // File by this name already exists, increment copy number
         this.incrementCopyNumber();
 
-        await writeFilePromisified(this.repositoriesFilePath, buffer, encoding);
+        await writeFile(this.repositoriesFilePath, buffer, encoding);
 
         return {
           path: this.repositoriesFilePath,
@@ -241,11 +288,7 @@ export class FileUtility {
       } catch (e) {
         // file does not exist
         try {
-          await writeFilePromisified(
-            this.repositoriesFilePath,
-            buffer,
-            encoding
-          );
+          await writeFile(this.repositoriesFilePath, buffer, encoding);
           return {
             path: this.repositoriesFilePath,
             filename: this.filename,
@@ -275,7 +318,7 @@ export class FileUtility {
       }
 
       try {
-        await deleteFilePromisified(this.repositoriesFilePath);
+        await unlink(this.repositoriesFilePath);
       } catch (e) {
         throw new Error("unable_to_delete");
       }
@@ -298,7 +341,7 @@ export class FileUtility {
   }
 
   removeNodeFolder() {
-    return rmdirPromisified(this.nodePath, { recursive: true });
+    return rmdir(this.nodePath, { recursive: true });
   }
 
   // Change filename.txt to filename(1).txt
