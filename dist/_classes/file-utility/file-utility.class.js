@@ -10,18 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FileUtility = void 0;
-const fs_1 = require("fs");
 const lodash_1 = require("lodash");
-const util_1 = require("util");
+const promises_1 = require("node:fs/promises");
 const __1 = require("../..");
-const readFilePromisified = (0, util_1.promisify)(fs_1.readFile);
-const writeFilePromisified = (0, util_1.promisify)(fs_1.writeFile);
-const deleteFilePromisified = (0, util_1.promisify)(fs_1.unlink);
-const statPromisified = (0, util_1.promisify)(fs_1.stat);
-const mkdirPromisified = (0, util_1.promisify)(fs_1.mkdir);
-const rmdirPromisified = (0, util_1.promisify)(fs_1.rm);
 class FileUtility {
     constructor(config) {
+        this.imagesFolder = `${process.cwd()}/content/images`;
         this.tempFolder = process.env.WORDPARROT_TEMP_FILE_PATH || `${process.cwd()}/content/temp`;
         this.repositoriesFolder = process.env.WORDPARROT_REPOSITORIES_FILE_PATH ||
             `${process.cwd()}/content/repositories`;
@@ -37,6 +31,8 @@ class FileUtility {
         this.repositoryFileId = config.repositoryFileId;
         this.parentRepositoryItem = config.parentRepositoryItem;
         this.predefinedPath = config.predefinedPath;
+        this.imageId = config.imageId;
+        this.contentFolder = config.contentFolder;
     }
     get jobPath() {
         return `${this.tempFolder}/${this.pipelineJobId}`;
@@ -46,6 +42,9 @@ class FileUtility {
     }
     get filePath() {
         return `${this.nodePath}/${this.filename}`;
+    }
+    get imagesPath() {
+        return `${this.imagesFolder}/${this.filename}`;
     }
     get repositoriesPath() {
         return `${this.repositoriesFolder}/${this.repositoryId}`;
@@ -61,22 +60,55 @@ class FileUtility {
     }
     getMetadata() {
         var _a;
-        if (!this.predefinedPath && !this.filePath) {
+        if (!this.predefinedPath && !this.nodePath && !this.contentFolder) {
             throw new Error("File Utility getMetadata(): no path available for file source.");
         }
-        return {
+        let path;
+        if (this.predefinedPath) {
+            path = this.predefinedPath;
+        }
+        else {
+            switch (this.contentFolder) {
+                case "images":
+                    path = this.imagesPath;
+                    break;
+                case "temp":
+                    path = this.jobPath;
+                    break;
+                case "repositories":
+                    path = this.repositoriesFilePath;
+                    break;
+                default:
+                    path = this.filePath;
+            }
+        }
+        const baseMetadata = {
             uniqId: (_a = this.uniqId) !== null && _a !== void 0 ? _a : this.generateUniqueId(),
             filename: this.filename,
-            path: this.predefinedPath || this.filePath,
+            path,
             type: (0, __1.getExtension)(this.filename),
             mimeType: this.mimeType,
             encoding: this.encoding,
-            pipelineJobId: this.pipelineJobId,
-            pipelineNodeId: this.pipelineNodeId,
-            repositoryId: this.repositoryId,
-            repositoryFileId: this.repositoryFileId,
-            parentRepositoryItem: this.parentRepositoryItem,
         };
+        if (this.imageId) {
+            baseMetadata.imageId = this.imageId;
+        }
+        if (this.pipelineJobId) {
+            baseMetadata.pipelineJobId = this.pipelineJobId;
+        }
+        if (this.pipelineJobId) {
+            baseMetadata.pipelineNodeId = this.pipelineNodeId;
+        }
+        if (this.repositoryId) {
+            baseMetadata.repositoryId = this.repositoryId;
+        }
+        if (this.repositoryFileId) {
+            baseMetadata.repositoryFileId = this.repositoryFileId;
+        }
+        if (this.parentRepositoryItem) {
+            baseMetadata.parentRepositoryItem = this.parentRepositoryItem;
+        }
+        return baseMetadata;
     }
     generateUniqueId() {
         if (this.pipelineJobId && this.pipelineNodeId) {
@@ -107,12 +139,12 @@ class FileUtility {
     createNodeTempFolders() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield statPromisified(this.jobPath);
+                yield (0, promises_1.stat)(this.jobPath);
             }
             catch (e) {
                 // This folder does not exist yet
                 try {
-                    yield mkdirPromisified(this.jobPath);
+                    yield (0, promises_1.mkdir)(this.jobPath);
                 }
                 catch (e) {
                     console.log(e);
@@ -121,12 +153,12 @@ class FileUtility {
                 }
             }
             try {
-                yield statPromisified(this.nodePath);
+                yield (0, promises_1.stat)(this.nodePath);
             }
             catch (e) {
                 // This folder does not exist yet
                 try {
-                    yield mkdirPromisified(this.nodePath);
+                    yield (0, promises_1.mkdir)(this.nodePath);
                 }
                 catch (e) {
                     console.log(e);
@@ -141,18 +173,18 @@ class FileUtility {
             if (!this.buffer) {
                 throw new Error("File Utility writeToTempFolder: no buffer found.");
             }
-            return writeFilePromisified(this.filePath, this.buffer, encoding);
+            return (0, promises_1.writeFile)(this.filePath, this.buffer, encoding);
         });
     }
     createRepositoryFolder() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield statPromisified(this.repositoriesPath);
+                yield (0, promises_1.stat)(this.repositoriesPath);
             }
             catch (e) {
                 // This folder does not exist yet
                 try {
-                    yield mkdirPromisified(this.repositoriesPath);
+                    yield (0, promises_1.mkdir)(this.repositoriesPath);
                 }
                 catch (e) {
                     console.log(e);
@@ -164,20 +196,20 @@ class FileUtility {
     }
     retrieveBufferFromTemp() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.buffer = yield readFilePromisified(this.filePath);
+            this.buffer = yield (0, promises_1.readFile)(this.filePath);
             return this.buffer;
         });
     }
     retrieveBufferFromRepository() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.buffer = yield readFilePromisified(this.repositoriesFilePath);
+            this.buffer = yield (0, promises_1.readFile)(this.repositoriesFilePath);
             return this.buffer;
         });
     }
     static getBuffer(fileMetadata) {
         return __awaiter(this, void 0, void 0, function* () {
             const { path } = fileMetadata;
-            return readFilePromisified(path);
+            return (0, promises_1.readFile)(path);
         });
     }
     saveTempToRepositoryFolder(encoding = "utf8", buffer) {
@@ -200,10 +232,10 @@ class FileUtility {
                     throw new Error("repositories_path_not_set");
                 }
                 try {
-                    yield statPromisified(this.repositoriesFilePath);
+                    yield (0, promises_1.stat)(this.repositoriesFilePath);
                     // File by this name already exists, increment copy number
                     this.incrementCopyNumber();
-                    yield writeFilePromisified(this.repositoriesFilePath, buffer, encoding);
+                    yield (0, promises_1.writeFile)(this.repositoriesFilePath, buffer, encoding);
                     return {
                         path: this.repositoriesFilePath,
                         filename: this.filename,
@@ -214,7 +246,7 @@ class FileUtility {
                 catch (e) {
                     // file does not exist
                     try {
-                        yield writeFilePromisified(this.repositoriesFilePath, buffer, encoding);
+                        yield (0, promises_1.writeFile)(this.repositoriesFilePath, buffer, encoding);
                         return {
                             path: this.repositoriesFilePath,
                             filename: this.filename,
@@ -246,7 +278,7 @@ class FileUtility {
                     throw new Error("repositories_path_not_set");
                 }
                 try {
-                    yield deleteFilePromisified(this.repositoriesFilePath);
+                    yield (0, promises_1.unlink)(this.repositoriesFilePath);
                 }
                 catch (e) {
                     throw new Error("unable_to_delete");
@@ -270,7 +302,7 @@ class FileUtility {
         });
     }
     removeNodeFolder() {
-        return rmdirPromisified(this.nodePath, { recursive: true });
+        return (0, promises_1.rmdir)(this.nodePath, { recursive: true });
     }
     // Change filename.txt to filename(1).txt
     incrementCopyNumber() {
