@@ -33,6 +33,8 @@ class FileUtility {
         this.predefinedPath = config.predefinedPath;
         this.imageId = config.imageId;
         this.contentFolder = config.contentFolder;
+        this.header = config.header;
+        this.tagline = config.tagline;
     }
     get jobPath() {
         return `${this.tempFolder}/${this.pipelineJobId}`;
@@ -89,6 +91,8 @@ class FileUtility {
             type: (0, __1.getExtension)(this.filename),
             mimeType: this.mimeType,
             encoding: this.encoding,
+            header: this.header,
+            tagline: this.tagline,
         };
         if (this.imageId) {
             baseMetadata.imageId = this.imageId;
@@ -133,6 +137,8 @@ class FileUtility {
                 repositoryId: this.repositoryId,
                 repositoryFileId: this.repositoryFileId,
                 parentRepositoryItem: this.parentRepositoryItem,
+                header: this.header,
+                tagline: this.tagline,
             };
         });
     }

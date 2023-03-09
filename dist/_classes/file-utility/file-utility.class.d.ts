@@ -21,6 +21,8 @@ export declare class FileUtility {
         nodeUniqId: string;
         uniqId: string;
     };
+    header?: string;
+    tagline?: string;
     imagesFolder: string;
     tempFolder: string;
     repositoriesFolder: string;
