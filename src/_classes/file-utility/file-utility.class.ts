@@ -36,8 +36,8 @@ export class FileUtility {
     nodeUniqId: string;
     uniqId: string;
   };
-  header?: string;
-  tagline?: string;
+  header: string;
+  caption: string;
 
   public imagesFolder = `${process.cwd()}/content/images`;
   public tempFolder =
@@ -62,7 +62,7 @@ export class FileUtility {
     this.imageId = config.imageId;
     this.contentFolder = config.contentFolder;
     this.header = config.header;
-    this.tagline = config.tagline;
+    this.caption = config.caption;
   }
 
   get jobPath(): string {
@@ -134,7 +134,8 @@ export class FileUtility {
       mimeType: this.mimeType,
       encoding: this.encoding,
       header: this.header,
-      tagline: this.tagline,
+      caption: this.caption,
+      publicURL: this.getPublicURL(),
     };
 
     if (this.imageId) {
@@ -171,6 +172,23 @@ export class FileUtility {
     return `timestamp_${Date.now()}_${this.filename}`;
   }
 
+  private getPublicURL(): string | null {
+    let url = `https://${process.env.AUTHORIZED_DOMAIN}/`;
+
+    switch (this.contentFolder) {
+      case "images":
+        url += `images/${this.filename}`;
+        break;
+      case "repositories":
+        url += `repositories/${this.repositoryId}/${this.filename}`;
+        break;
+      default:
+        return null;
+    }
+
+    return url;
+  }
+
   async saveToTemp(encoding?: WriteFileOptions): Promise<FileMetadata> {
     await this.createNodeTempFolders();
     await this.writeToTempFolder(encoding || this.encoding);
@@ -189,7 +207,8 @@ export class FileUtility {
       repositoryFileId: this.repositoryFileId,
       parentRepositoryItem: this.parentRepositoryItem,
       header: this.header,
-      tagline: this.tagline,
+      caption: this.caption,
+      publicURL: this.getPublicURL(),
     };
   }
 

@@ -21,8 +21,8 @@ export declare class FileUtility {
         nodeUniqId: string;
         uniqId: string;
     };
-    header?: string;
-    tagline?: string;
+    header: string;
+    caption: string;
     imagesFolder: string;
     tempFolder: string;
     repositoriesFolder: string;
@@ -35,6 +35,7 @@ export declare class FileUtility {
     get repositoriesFilePath(): string;
     getMetadata(): FileMetadata;
     private generateUniqueId;
+    private getPublicURL;
     saveToTemp(encoding?: WriteFileOptions): Promise<FileMetadata>;
     private createNodeTempFolders;
     private writeToTempFolder;

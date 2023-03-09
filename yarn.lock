@@ -2072,7 +2072,7 @@ which@^2.0.1:
 
 "wordparrot-types@https://github.com/wordparrot/types-core.git":
   version "1.0.0"
-  resolved "https://github.com/wordparrot/types-core.git#d999c6335e81a2f780892724c1af1a9b9f122edf"
+  resolved "https://github.com/wordparrot/types-core.git#91895321c7ae4048039a0ef76ce8db64d9b9dd9d"
   dependencies:
     "@commitlint/cli" "^16.2.3"
     "@commitlint/config-conventional" "^16.2.1"
