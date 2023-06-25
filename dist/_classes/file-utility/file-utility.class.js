@@ -122,7 +122,10 @@ class FileUtility {
         return `timestamp_${Date.now()}_${this.filename}`;
     }
     getPublicURL() {
-        let url = `https://${process.env.AUTHORIZED_DOMAIN}/`;
+        if (!process.env.AUTHORIZED_DOMAIN || process.env.NODE_ENV !== 'production') {
+            return null;
+        }
+        let url = `https://${process.env.AUTHORIZED_DOMAIN}/content`;
         switch (this.contentFolder) {
             case "images":
                 url += `images/${this.filename}`;
