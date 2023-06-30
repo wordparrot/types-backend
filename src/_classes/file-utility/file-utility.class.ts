@@ -173,14 +173,11 @@ export class FileUtility {
   }
 
   private getPublicURL(): string | null {
-    if (
-      !process.env.AUTHORIZED_DOMAIN ||
-      process.env.NODE_ENV !== "production"
-    ) {
+    if (!process.env.AUTHORIZED_DOMAIN) {
       return null;
     }
 
-    let url = `https://${process.env.AUTHORIZED_DOMAIN}/content`;
+    let url = `https://${process.env.AUTHORIZED_DOMAIN}/content/`;
 
     switch (this.contentFolder) {
       case "images":
