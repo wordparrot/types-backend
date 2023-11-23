@@ -42,7 +42,7 @@ export class FileUtility {
     process.env.WORDPARROT_REPOSITORIES_FILE_PATH ||
     `${process.cwd()}/content/repositories`;
 
-  constructor(config: FileMetadata) {
+  constructor(config: Partial<FileMetadata>) {
     this.uniqId = config.uniqId;
     this.pipelineJobId = config.pipelineJobId;
     this.pipelineNodeId = config.pipelineNodeId;

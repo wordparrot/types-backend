@@ -26,7 +26,7 @@ export declare class FileUtility {
     imagesFolder: string;
     tempFolder: string;
     repositoriesFolder: string;
-    constructor(config: FileMetadata);
+    constructor(config: Partial<FileMetadata>);
     get jobPath(): string;
     get nodePath(): string;
     get filePath(): string;
