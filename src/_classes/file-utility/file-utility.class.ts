@@ -1,9 +1,5 @@
 import { BufferEncodingOption, WriteFileOptions, rm } from "fs";
-import {
-  FileMetadata,
-  FileMetadataContentFolder,
-  FileUtilityConfig,
-} from "wordparrot-types";
+import { FileMetadata, FileMetadataContentFolder } from "wordparrot-types";
 import { isInteger, throttle } from "lodash";
 import { promisify } from "util";
 import {
@@ -46,7 +42,7 @@ export class FileUtility {
     process.env.WORDPARROT_REPOSITORIES_FILE_PATH ||
     `${process.cwd()}/content/repositories`;
 
-  constructor(config: FileUtilityConfig<WriteFileOptions>) {
+  constructor(config: FileMetadata) {
     this.uniqId = config.uniqId;
     this.pipelineJobId = config.pipelineJobId;
     this.pipelineNodeId = config.pipelineNodeId;
@@ -58,11 +54,14 @@ export class FileUtility {
     this.repositoryId = config.repositoryId;
     this.repositoryFileId = config.repositoryFileId;
     this.parentRepositoryItem = config.parentRepositoryItem;
-    this.predefinedPath = config.predefinedPath;
     this.imageId = config.imageId;
     this.contentFolder = config.contentFolder;
     this.header = config.header;
     this.caption = config.caption;
+
+    if (config.predefinedPath) {
+      this.predefinedPath = config.predefinedPath;
+    }
   }
 
   get jobPath(): string {
