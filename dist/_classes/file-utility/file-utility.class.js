@@ -30,11 +30,13 @@ class FileUtility {
         this.repositoryId = config.repositoryId;
         this.repositoryFileId = config.repositoryFileId;
         this.parentRepositoryItem = config.parentRepositoryItem;
-        this.predefinedPath = config.predefinedPath;
         this.imageId = config.imageId;
         this.contentFolder = config.contentFolder;
         this.header = config.header;
         this.caption = config.caption;
+        if (config.predefinedPath) {
+            this.predefinedPath = config.predefinedPath;
+        }
     }
     get jobPath() {
         return `${this.tempFolder}/${this.pipelineJobId}`;

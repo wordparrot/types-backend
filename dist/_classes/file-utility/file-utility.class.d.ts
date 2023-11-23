@@ -1,7 +1,7 @@
 /// <reference types="node" />
 /// <reference types="node" />
 import { WriteFileOptions } from "fs";
-import { FileMetadata, FileMetadataContentFolder, FileUtilityConfig } from "wordparrot-types";
+import { FileMetadata, FileMetadataContentFolder } from "wordparrot-types";
 import { FileOperation } from "../..";
 export declare class FileUtility {
     pipelineJobId: string;
@@ -26,7 +26,7 @@ export declare class FileUtility {
     imagesFolder: string;
     tempFolder: string;
     repositoriesFolder: string;
-    constructor(config: FileUtilityConfig<WriteFileOptions>);
+    constructor(config: FileMetadata);
     get jobPath(): string;
     get nodePath(): string;
     get filePath(): string;
