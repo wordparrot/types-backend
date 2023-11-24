@@ -15,4 +15,3 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./constructable"), exports);
-__exportStar(require("./sandbox"), exports);
